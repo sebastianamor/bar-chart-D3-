@@ -6,6 +6,9 @@ const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.t
 
 const apiUrl = "https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json";
 
+// Crear el tooltip
+const tooltip = d3.select("#tooltip");
+
 // Función para obtener datos de la API
 async function fetchData() {
   try {
@@ -56,11 +59,25 @@ function processData(data) {
     .enter()
     .append("rect")
     .attr("class", "bar")
-    .attr("x", d => x(d.date))
-    .attr("y", d => y(d.value))
-    .attr("width", width / formattedData.length) // Ancho de las barras
-    .attr("height", d => height - y(d.value))
-    .attr("fill", "steelblue");
+    .attr("data-date", d => d.date.toISOString().split('T')[0]) // Formato YYYY-MM-DD
+    .attr("data-gdp", d => d.value) // Valor del GDP
+    .attr("x", d => x(d.date)) // Posición x basada en la escala de tiempo
+    .attr("y", d => y(d.value)) // Posición y basada en la escala lineal
+    .attr("width", (width / formattedData.length) - 1) // Ancho de las barras con espacio entre ellas
+    .attr("height", d => height - y(d.value)) // Altura de las barras
+    .attr("fill", "#0de21a")
+    .on("mouseover", function (event, d) {
+      // Mostrar el tooltip
+      tooltip.style("opacity", 0.9)
+        .html(`Fecha: ${d.date.toISOString().split('T')[0]}<br>PIB: $${d.value} billones`)
+        .attr("data-date", d.date.toISOString().split('T')[0]) // Establecer data-date
+        .style("left", `${event.pageX + 5}px`) // Posicionar el tooltip
+        .style("top", `${event.pageY - 38}px`);
+    })
+    .on("mouseout", function () {
+      // Ocultar el tooltip
+      tooltip.style("opacity", 0);
+    });
 }
 
 // Llamar a la función para obtener los datos
